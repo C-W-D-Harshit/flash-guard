@@ -1,6 +1,253 @@
+import { browser } from 'wxt/browser';
+
 export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+  matches: [
+    "*://www.youtube.com/*",
+    "*://youtube.com/*",
+    "*://www.twitch.tv/*",
+    "*://twitch.tv/*",
+    "*://vimeo.com/*",
+    "*://www.vimeo.com/*",
+    "*://*/*",
+  ],
   main() {
-    console.log('Hello content.');
+    let isEnabled = true;
+    let dimLevel = 0.5; // How much to dim (0.1 = light, 0.9 = maximum)
+    let brightnessThreshold = 0.6; // When to trigger dimming (0.1 = sensitive, 1.0 = only very bright)
+    let currentVideo: HTMLVideoElement | null = null;
+    let monitoringInterval: number | null = null;
+    let currentDimLevel = 0;
+    let lastBrightness = 0;
+
+    // Canvas for analyzing video frames
+    let analysisCanvas: HTMLCanvasElement | null = null;
+    let analysisContext: CanvasRenderingContext2D | null = null;
+
+    function initializeFlashGuard() {
+      console.log('FlashGuard: Initializing...');
+      
+      // Load settings from storage
+      browser.storage.sync.get([
+        "flashGuardEnabled", 
+        "flashGuardDimLevel",
+        "flashGuardBrightnessThreshold"
+      ]).then((result) => {
+          isEnabled = result.flashGuardEnabled !== false; // Default to true
+          dimLevel = result.flashGuardDimLevel || 0.5;
+          brightnessThreshold = result.flashGuardBrightnessThreshold || 0.6;
+          
+          console.log('FlashGuard: Settings loaded', { isEnabled, dimLevel, brightnessThreshold });
+
+          if (isEnabled) {
+            startMonitoring();
+          }
+        }).catch(err => {
+          console.log('FlashGuard: Storage error, using defaults', err);
+          isEnabled = true;
+          dimLevel = 0.5;
+          brightnessThreshold = 0.6;
+          startMonitoring();
+        });
+
+      // Listen for settings changes
+      browser.storage.onChanged.addListener((changes) => {
+        if (changes.flashGuardEnabled) {
+          isEnabled = changes.flashGuardEnabled.newValue;
+          if (isEnabled) {
+            startMonitoring();
+          } else {
+            stopMonitoring();
+            removeDimming();
+          }
+        }
+        if (changes.flashGuardDimLevel) {
+          dimLevel = changes.flashGuardDimLevel.newValue;
+          console.log('FlashGuard: Dim level updated to', dimLevel);
+        }
+        if (changes.flashGuardBrightnessThreshold) {
+          brightnessThreshold = changes.flashGuardBrightnessThreshold.newValue;
+          console.log('FlashGuard: Brightness threshold updated to', brightnessThreshold);
+        }
+      });
+    }
+
+    function createAnalysisCanvas(): void {
+      if (!analysisCanvas) {
+        analysisCanvas = document.createElement("canvas");
+        analysisCanvas.width = 64; // Small size for performance
+        analysisCanvas.height = 36;
+        analysisContext = analysisCanvas.getContext("2d");
+      }
+    }
+
+    function calculateBrightness(video: HTMLVideoElement): number {
+      if (!analysisContext || !analysisCanvas) return 0;
+
+      try {
+        // Draw video frame to small canvas for analysis
+        analysisContext.drawImage(
+          video,
+          0,
+          0,
+          analysisCanvas.width,
+          analysisCanvas.height
+        );
+        const imageData = analysisContext.getImageData(
+          0,
+          0,
+          analysisCanvas.width,
+          analysisCanvas.height
+        );
+        const data = imageData.data;
+
+        let totalBrightness = 0;
+        let pixelCount = 0;
+
+        // Sample every 4th pixel for performance
+        for (let i = 0; i < data.length; i += 16) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          // Calculate luminance using standard formula
+          const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          totalBrightness += brightness;
+          pixelCount++;
+        }
+
+        return pixelCount > 0 ? totalBrightness / pixelCount : 0;
+      } catch (error) {
+        // Handle CORS issues or other errors silently
+        return lastBrightness;
+      }
+    }
+
+    function applyDimming(video: HTMLVideoElement): void {
+      if (currentVideo !== video) {
+        // Remove dimming from previous video
+        removeDimming();
+        currentVideo = video;
+        console.log('FlashGuard: Switched to new video');
+      }
+    }
+
+    function updateDimLevel(targetDimLevel: number): void {
+      if (!currentVideo) return;
+
+      currentDimLevel = targetDimLevel;
+      
+      // Apply brightness filter directly to video
+      const brightness = Math.max(0.2, 1 - (currentDimLevel * 0.8)); // Min 20% brightness
+      const filters = `brightness(${brightness})`;
+      
+      currentVideo.style.filter = filters;
+      currentVideo.style.transition = 'filter 0.1s ease-out';
+      
+      console.log('FlashGuard: Applied filter:', filters);
+    }
+
+    function removeDimming(): void {
+      if (currentVideo) {
+        currentVideo.style.filter = '';
+        currentVideo.style.transition = '';
+        console.log('FlashGuard: Removed dimming from video');
+      }
+      currentVideo = null;
+      currentDimLevel = 0;
+    }
+
+    function monitorVideos(): void {
+      const videos = document.querySelectorAll(
+        "video"
+      ) as NodeListOf<HTMLVideoElement>;
+
+      if (videos.length === 0) return;
+
+      videos.forEach((video) => {
+        if (video.readyState >= 2 && !video.paused && video.currentTime > 0) {
+          // Ensure we're tracking this video
+          applyDimming(video);
+
+          const brightness = calculateBrightness(video);
+          
+          // Debug log every few seconds
+          if (Math.floor(video.currentTime) % 3 === 0 && video.currentTime !== lastBrightness) {
+            console.log('FlashGuard: Brightness:', brightness.toFixed(3), 'Threshold:', brightnessThreshold);
+          }
+
+          if (brightness > 0) {
+            lastBrightness = brightness;
+
+            // Simple threshold-based dimming using user settings
+            let shouldDim = brightness > brightnessThreshold;
+            
+            if (shouldDim && currentDimLevel === 0) {
+              // Start dimming - use user-defined dim level
+              updateDimLevel(dimLevel);
+              console.log('FlashGuard: Bright content detected! Applying dim level:', dimLevel.toFixed(3));
+            } else if (!shouldDim && currentDimLevel > 0) {
+              // Stop dimming - return to normal
+              updateDimLevel(0);
+              console.log('FlashGuard: Content no longer bright, removing dimming');
+            }
+          }
+        }
+      });
+    }
+
+    function startMonitoring(): void {
+      if (monitoringInterval) return;
+
+      console.log('FlashGuard: Starting video monitoring...');
+      createAnalysisCanvas();
+
+      // Monitor at 30 FPS for smooth response
+      monitoringInterval = window.setInterval(monitorVideos, 33);
+    }
+
+    function stopMonitoring(): void {
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+        monitoringInterval = null;
+      }
+    }
+
+    // Initialize when page loads
+    function init() {
+      console.log('FlashGuard: Content script loaded on', window.location.href);
+      
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeFlashGuard);
+      } else {
+        initializeFlashGuard();
+      }
+      
+      // Also try after a short delay to catch dynamically loaded videos
+      setTimeout(initializeFlashGuard, 1000);
+      setTimeout(initializeFlashGuard, 3000);
+    }
+    
+    init();
+
+    // Handle dynamic video loading (SPA navigation)
+    const observer = new MutationObserver(() => {
+      if (isEnabled && document.querySelectorAll("video").length > 0) {
+        if (!monitoringInterval) {
+          startMonitoring();
+        }
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Cleanup on page unload
+    window.addEventListener("beforeunload", () => {
+      stopMonitoring();
+      removeDimming();
+      observer.disconnect();
+    });
   },
 });
