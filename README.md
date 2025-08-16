@@ -34,7 +34,7 @@ FlashGuard is a Chrome extension that automatically detects bright content in vi
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/your-username/flash-guard.git
+   git clone https://github.com/c-w-d-harshit/flash-guard.git
    cd flash-guard
    ```
 
@@ -157,8 +157,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/your-username/flash-guard/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/your-username/flash-guard/discussions)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/c-w-d-harshit/flash-guard/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/c-w-d-harshit/flash-guard/discussions)
 - 📧 **Email**: <support@flashguard.dev>
 
 ---

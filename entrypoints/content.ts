@@ -24,8 +24,6 @@ export default defineContentScript({
     let analysisContext: CanvasRenderingContext2D | null = null;
 
     function initializeFlashGuard() {
-      console.log('FlashGuard: Initializing...');
-      
       // Load settings from storage
       browser.storage.sync.get([
         "flashGuardEnabled", 
@@ -36,16 +34,15 @@ export default defineContentScript({
           dimLevel = result.flashGuardDimLevel || 0.5;
           brightnessThreshold = result.flashGuardBrightnessThreshold || 0.6;
           
-          console.log('FlashGuard: Settings loaded', { isEnabled, dimLevel, brightnessThreshold });
 
-          if (isEnabled) {
-            startMonitoring();
-          }
+          // Always start monitoring so we can remove dimming when disabled
+          startMonitoring();
         }).catch(err => {
-          console.log('FlashGuard: Storage error, using defaults', err);
+          // Use defaults on storage error
           isEnabled = true;
           dimLevel = 0.5;
           brightnessThreshold = 0.6;
+          // Always start monitoring so we can remove dimming when disabled
           startMonitoring();
         });
 
@@ -53,20 +50,16 @@ export default defineContentScript({
       browser.storage.onChanged.addListener((changes) => {
         if (changes.flashGuardEnabled) {
           isEnabled = changes.flashGuardEnabled.newValue;
-          if (isEnabled) {
-            startMonitoring();
-          } else {
-            stopMonitoring();
+          // If disabled, immediately remove any dimming
+          if (!isEnabled) {
             removeDimming();
           }
         }
         if (changes.flashGuardDimLevel) {
           dimLevel = changes.flashGuardDimLevel.newValue;
-          console.log('FlashGuard: Dim level updated to', dimLevel);
         }
         if (changes.flashGuardBrightnessThreshold) {
           brightnessThreshold = changes.flashGuardBrightnessThreshold.newValue;
-          console.log('FlashGuard: Brightness threshold updated to', brightnessThreshold);
         }
       });
     }
@@ -127,7 +120,6 @@ export default defineContentScript({
         // Remove dimming from previous video
         removeDimming();
         currentVideo = video;
-        console.log('FlashGuard: Switched to new video');
       }
     }
 
@@ -142,21 +134,27 @@ export default defineContentScript({
       
       currentVideo.style.filter = filters;
       currentVideo.style.transition = 'filter 0.1s ease-out';
-      
-      console.log('FlashGuard: Applied filter:', filters);
     }
 
     function removeDimming(): void {
       if (currentVideo) {
         currentVideo.style.filter = '';
         currentVideo.style.transition = '';
-        console.log('FlashGuard: Removed dimming from video');
       }
       currentVideo = null;
       currentDimLevel = 0;
     }
 
     function monitorVideos(): void {
+      // First check if extension is enabled
+      if (!isEnabled) {
+        // If disabled, make sure to remove any existing dimming
+        if (currentDimLevel > 0) {
+          updateDimLevel(0);
+        }
+        return;
+      }
+
       const videos = document.querySelectorAll(
         "video"
       ) as NodeListOf<HTMLVideoElement>;
@@ -169,11 +167,6 @@ export default defineContentScript({
           applyDimming(video);
 
           const brightness = calculateBrightness(video);
-          
-          // Debug log every few seconds
-          if (Math.floor(video.currentTime) % 3 === 0 && video.currentTime !== lastBrightness) {
-            console.log('FlashGuard: Brightness:', brightness.toFixed(3), 'Threshold:', brightnessThreshold);
-          }
 
           if (brightness > 0) {
             lastBrightness = brightness;
@@ -184,11 +177,9 @@ export default defineContentScript({
             if (shouldDim && currentDimLevel === 0) {
               // Start dimming - use user-defined dim level
               updateDimLevel(dimLevel);
-              console.log('FlashGuard: Bright content detected! Applying dim level:', dimLevel.toFixed(3));
             } else if (!shouldDim && currentDimLevel > 0) {
               // Stop dimming - return to normal
               updateDimLevel(0);
-              console.log('FlashGuard: Content no longer bright, removing dimming');
             }
           }
         }
@@ -198,10 +189,9 @@ export default defineContentScript({
     function startMonitoring(): void {
       if (monitoringInterval) return;
 
-      console.log('FlashGuard: Starting video monitoring...');
       createAnalysisCanvas();
 
-      // Monitor at 30 FPS for smooth response
+      // Monitor at 30 FPS for smooth response - always monitor so we can remove dimming when disabled
       monitoringInterval = window.setInterval(monitorVideos, 33);
     }
 
@@ -214,8 +204,6 @@ export default defineContentScript({
 
     // Initialize when page loads
     function init() {
-      console.log('FlashGuard: Content script loaded on', window.location.href);
-      
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initializeFlashGuard);
       } else {
