@@ -1,5 +1,5 @@
 {
-  "name": "ytdimmer",
+  "name": "YtDimmer",
   "description": "Automatically detects and dims bright flashes in videos to prevent eye strain",
   "private": true,
   "version": "0.0.0",
