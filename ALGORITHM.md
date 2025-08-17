@@ -12,13 +12,14 @@ YtDimmer uses a sophisticated canvas-based frame analysis system that continuous
 
 ```typescript
 // Creates a small analysis canvas for performance
-analysisCanvas = document.createElement('canvas');
-analysisCanvas.width = 64;  // Small size for speed
+analysisCanvas = document.createElement("canvas");
+analysisCanvas.width = 64; // Small size for speed
 analysisCanvas.height = 36;
-analysisContext = analysisCanvas.getContext('2d');
+analysisContext = analysisCanvas.getContext("2d");
 ```
 
 **Why small canvas?**
+
 - Reduces computational overhead by ~95%
 - Maintains brightness accuracy while improving performance
 - 64x36 provides sufficient sampling resolution
@@ -30,8 +31,8 @@ analysisContext = analysisCanvas.getContext('2d');
 monitoringInterval = window.setInterval(monitorVideos, 33);
 
 function monitorVideos() {
-  const videos = document.querySelectorAll('video');
-  videos.forEach(video => {
+  const videos = document.querySelectorAll("video");
+  videos.forEach((video) => {
     if (video.readyState >= 2 && !video.paused && video.currentTime > 0) {
       const brightness = calculateBrightness(video);
       // Apply dimming logic...
@@ -41,6 +42,7 @@ function monitorVideos() {
 ```
 
 **Frame capture process:**
+
 1. Find all `<video>` elements on page
 2. Check if video is playing and ready
 3. Draw current frame to analysis canvas
@@ -52,8 +54,19 @@ function monitorVideos() {
 ```typescript
 function calculateBrightness(video: HTMLVideoElement): number {
   // Draw video frame to small canvas for analysis
-  analysisContext.drawImage(video, 0, 0, analysisCanvas.width, analysisCanvas.height);
-  const imageData = analysisContext.getImageData(0, 0, analysisCanvas.width, analysisCanvas.height);
+  analysisContext.drawImage(
+    video,
+    0,
+    0,
+    analysisCanvas.width,
+    analysisCanvas.height
+  );
+  const imageData = analysisContext.getImageData(
+    0,
+    0,
+    analysisCanvas.width,
+    analysisCanvas.height
+  );
   const data = imageData.data;
 
   let totalBrightness = 0;
@@ -62,9 +75,9 @@ function calculateBrightness(video: HTMLVideoElement): number {
   // Sample every 4th pixel for performance
   for (let i = 0; i < data.length; i += 16) {
     const r = data[i];
-    const g = data[i + 1]; 
+    const g = data[i + 1];
     const b = data[i + 2];
-    
+
     // Calculate luminance using standard formula
     const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     totalBrightness += brightness;
@@ -76,8 +89,9 @@ function calculateBrightness(video: HTMLVideoElement): number {
 ```
 
 **Luminance Formula (ITU-R BT.709)**
+
 - **Red: 29.9%** - Moderate eye sensitivity
-- **Green: 58.7%** - Highest eye sensitivity 
+- **Green: 58.7%** - Highest eye sensitivity
 - **Blue: 11.4%** - Lowest eye sensitivity
 
 This formula accurately represents how the human visual system perceives brightness, not just mathematical averages.
@@ -87,23 +101,27 @@ This formula accurately represents how the human visual system perceives brightn
 ```typescript
 function monitorVideos() {
   const brightness = calculateBrightness(video);
-  
+
   // Simple threshold-based dimming using user settings
   let shouldDim = brightness > brightnessThreshold; // User configurable (0.1 - 1.0)
-  
+
   if (shouldDim && currentDimLevel === 0) {
     // Start dimming - use user-defined dim level
     updateDimLevel(dimLevel); // User configurable (0.1 - 0.9)
-    console.log('YtDimmer: Bright content detected! Applying dim level:', dimLevel);
+    console.log(
+      "YtDimmer: Bright content detected! Applying dim level:",
+      dimLevel
+    );
   } else if (!shouldDim && currentDimLevel > 0) {
     // Stop dimming - return to normal
     updateDimLevel(0);
-    console.log('YtDimmer: Content no longer bright, removing dimming');
+    console.log("YtDimmer: Content no longer bright, removing dimming");
   }
 }
 ```
 
 **Two-stage protection:**
+
 - **Brightness Threshold** - When to trigger dimming (sensitivity)
 - **Dim Level** - How much to dim (protection strength)
 
@@ -114,17 +132,18 @@ function updateDimLevel(targetDimLevel: number): void {
   if (!currentVideo) return;
 
   currentDimLevel = targetDimLevel;
-  
+
   // Apply brightness filter directly to video
-  const brightness = Math.max(0.2, 1 - (currentDimLevel * 0.8)); // Min 20% brightness
+  const brightness = Math.max(0.2, 1 - currentDimLevel * 0.8); // Min 20% brightness
   const filters = `brightness(${brightness})`;
-  
+
   currentVideo.style.filter = filters;
-  currentVideo.style.transition = 'filter 0.1s ease-out';
+  currentVideo.style.transition = "filter 0.1s ease-out";
 }
 ```
 
 **Filter characteristics:**
+
 - **Direct video manipulation** - Applied to `<video>` element
 - **Hardware accelerated** - Uses GPU for smooth performance
 - **Minimum brightness** - Never goes below 20% visibility
@@ -133,30 +152,41 @@ function updateDimLevel(targetDimLevel: number): void {
 ## Performance Optimizations
 
 ### Canvas Size Reduction
+
 - **64x36 pixels** instead of full video resolution
 - **~95% reduction** in pixels to analyze
 - Maintains brightness accuracy while dramatically improving speed
 
 ### Pixel Sampling
+
 ```typescript
 // Sample every 4th pixel for performance
 for (let i = 0; i < data.length; i += 16) {
   // Process pixel...
 }
 ```
+
 - **4x reduction** in pixel processing
 - Statistical sampling maintains accuracy
 - Reduces CPU usage significantly
 
 ### Frame Rate Control
+
 - **30 FPS monitoring** - Balances responsiveness with performance
 - **33ms intervals** - Synchronized with typical video frame rates
 - **Conditional processing** - Only analyzes playing videos
 
 ### Error Handling
+
 ```typescript
 try {
-  analysisContext.drawImage(video, 0, 0, analysisCanvas.width, analysisCanvas.height);
+  analysisContext.drawImage(
+    video,
+    0,
+    0,
+    analysisCanvas.width,
+    analysisCanvas.height
+  );
   // Process frame...
 } catch (error) {
   // Handle CORS issues or other errors silently
@@ -165,6 +195,7 @@ try {
 ```
 
 **Robust fallbacks:**
+
 - **CORS protection** - Handles cross-origin video restrictions
 - **Graceful degradation** - Uses last known brightness on errors
 - **Memory management** - Proper cleanup on page navigation
@@ -172,21 +203,25 @@ try {
 ## Technical Advantages
 
 ### 🎯 Accuracy
+
 - **Perceptually uniform** - Matches human visual perception
 - **Content agnostic** - Works with any video format or codec
 - **Real-time analysis** - Detects changes as they happen
 
 ### ⚡ Performance
+
 - **Optimized sampling** - Smart pixel reduction techniques
 - **Hardware acceleration** - GPU-based CSS filters
 - **Minimal overhead** - <1% CPU usage on modern devices
 
 ### 🛡️ Protection
+
 - **Instant response** - <33ms detection and dimming
 - **Smooth recovery** - Gradual return to normal brightness
 - **User control** - Fully customizable sensitivity and strength
 
 ### 🔒 Privacy
+
 - **Local processing** - All analysis happens in browser
 - **No data transmission** - Zero external communication
 - **Cross-origin safe** - Handles restricted content gracefully
@@ -201,12 +236,12 @@ Video Frame → Canvas Draw → Pixel Sampling → Luminance Calc → Threshold 
 
 ## Comparison with Alternatives
 
-| Method | Accuracy | Performance | Privacy | Compatibility |
-|--------|----------|-------------|---------|---------------|
-| **Canvas Analysis** | ✅ High | ✅ Excellent | ✅ Full | ✅ Universal |
-| Video metadata | ❌ Poor | ✅ Good | ✅ Full | ❌ Limited |
-| Server analysis | ✅ High | ❌ Poor | ❌ None | ❌ Limited |
-| Histogram analysis | ⚠️ Medium | ❌ Poor | ✅ Full | ✅ Good |
+| Method              | Accuracy  | Performance  | Privacy | Compatibility |
+| ------------------- | --------- | ------------ | ------- | ------------- |
+| **Canvas Analysis** | ✅ High   | ✅ Excellent | ✅ Full | ✅ Universal  |
+| Video metadata      | ❌ Poor   | ✅ Good      | ✅ Full | ❌ Limited    |
+| Server analysis     | ✅ High   | ❌ Poor      | ❌ None | ❌ Limited    |
+| Histogram analysis  | ⚠️ Medium | ❌ Poor      | ✅ Full | ✅ Good       |
 
 YtDimmer's canvas-based approach provides the optimal balance of accuracy, performance, privacy, and compatibility.
 
