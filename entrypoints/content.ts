@@ -1,4 +1,4 @@
-import { browser } from 'wxt/browser';
+import { browser } from "wxt/browser";
 
 export default defineContentScript({
   matches: [
@@ -25,19 +25,21 @@ export default defineContentScript({
 
     function initializeFlashGuard() {
       // Load settings from storage
-      browser.storage.sync.get([
-        "flashGuardEnabled", 
-        "flashGuardDimLevel",
-        "flashGuardBrightnessThreshold"
-      ]).then((result) => {
+      browser.storage.sync
+        .get([
+          "flashGuardEnabled",
+          "flashGuardDimLevel",
+          "flashGuardBrightnessThreshold",
+        ])
+        .then((result) => {
           isEnabled = result.flashGuardEnabled !== false; // Default to true
           dimLevel = result.flashGuardDimLevel || 0.5;
           brightnessThreshold = result.flashGuardBrightnessThreshold || 0.6;
-          
 
           // Always start monitoring so we can remove dimming when disabled
           startMonitoring();
-        }).catch(err => {
+        })
+        .catch((err) => {
           // Use defaults on storage error
           isEnabled = true;
           dimLevel = 0.5;
@@ -69,7 +71,10 @@ export default defineContentScript({
         analysisCanvas = document.createElement("canvas");
         analysisCanvas.width = 64; // Small size for performance
         analysisCanvas.height = 36;
-        analysisContext = analysisCanvas.getContext("2d");
+        // Use willReadFrequently for faster repeated getImageData reads
+        analysisContext = analysisCanvas.getContext("2d", {
+          willReadFrequently: true,
+        });
       }
     }
 
@@ -127,19 +132,19 @@ export default defineContentScript({
       if (!currentVideo) return;
 
       currentDimLevel = targetDimLevel;
-      
+
       // Apply brightness filter directly to video
-      const brightness = Math.max(0.2, 1 - (currentDimLevel * 0.8)); // Min 20% brightness
+      const brightness = Math.max(0.2, 1 - currentDimLevel * 0.8); // Min 20% brightness
       const filters = `brightness(${brightness})`;
-      
+
       currentVideo.style.filter = filters;
-      currentVideo.style.transition = 'filter 0.1s ease-out';
+      currentVideo.style.transition = "filter 0.1s ease-out";
     }
 
     function removeDimming(): void {
       if (currentVideo) {
-        currentVideo.style.filter = '';
-        currentVideo.style.transition = '';
+        currentVideo.style.filter = "";
+        currentVideo.style.transition = "";
       }
       currentVideo = null;
       currentDimLevel = 0;
@@ -173,7 +178,7 @@ export default defineContentScript({
 
             // Simple threshold-based dimming using user settings
             let shouldDim = brightness > brightnessThreshold;
-            
+
             if (shouldDim && currentDimLevel === 0) {
               // Start dimming - use user-defined dim level
               updateDimLevel(dimLevel);
@@ -209,12 +214,12 @@ export default defineContentScript({
       } else {
         initializeFlashGuard();
       }
-      
+
       // Also try after a short delay to catch dynamically loaded videos
       setTimeout(initializeFlashGuard, 1000);
       setTimeout(initializeFlashGuard, 3000);
     }
-    
+
     init();
 
     // Handle dynamic video loading (SPA navigation)
