@@ -23,18 +23,18 @@ export default defineContentScript({
     let analysisCanvas: HTMLCanvasElement | null = null;
     let analysisContext: CanvasRenderingContext2D | null = null;
 
-    function initializeFlashGuard() {
+    function initializeYtDimmer() {
       // Load settings from storage
       browser.storage.sync
         .get([
-          "flashGuardEnabled",
-          "flashGuardDimLevel",
-          "flashGuardBrightnessThreshold",
+          "ytDimmerEnabled",
+          "ytDimmerDimLevel",
+          "ytDimmerBrightnessThreshold",
         ])
         .then((result) => {
-          isEnabled = result.flashGuardEnabled !== false; // Default to true
-          dimLevel = result.flashGuardDimLevel || 0.5;
-          brightnessThreshold = result.flashGuardBrightnessThreshold || 0.6;
+          isEnabled = result.ytDimmerEnabled !== false; // Default to true
+          dimLevel = result.ytDimmerDimLevel || 0.5;
+          brightnessThreshold = result.ytDimmerBrightnessThreshold || 0.6;
 
           // Always start monitoring so we can remove dimming when disabled
           startMonitoring();
@@ -50,18 +50,18 @@ export default defineContentScript({
 
       // Listen for settings changes
       browser.storage.onChanged.addListener((changes) => {
-        if (changes.flashGuardEnabled) {
-          isEnabled = changes.flashGuardEnabled.newValue;
+        if (changes.ytDimmerEnabled) {
+          isEnabled = changes.ytDimmerEnabled.newValue;
           // If disabled, immediately remove any dimming
           if (!isEnabled) {
             removeDimming();
           }
         }
-        if (changes.flashGuardDimLevel) {
-          dimLevel = changes.flashGuardDimLevel.newValue;
+        if (changes.ytDimmerDimLevel) {
+          dimLevel = changes.ytDimmerDimLevel.newValue;
         }
-        if (changes.flashGuardBrightnessThreshold) {
-          brightnessThreshold = changes.flashGuardBrightnessThreshold.newValue;
+        if (changes.ytDimmerBrightnessThreshold) {
+          brightnessThreshold = changes.ytDimmerBrightnessThreshold.newValue;
         }
       });
     }
@@ -210,14 +210,14 @@ export default defineContentScript({
     // Initialize when page loads
     function init() {
       if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initializeFlashGuard);
+        document.addEventListener("DOMContentLoaded", initializeYtDimmer);
       } else {
-        initializeFlashGuard();
+        initializeYtDimmer();
       }
 
       // Also try after a short delay to catch dynamically loaded videos
-      setTimeout(initializeFlashGuard, 1000);
-      setTimeout(initializeFlashGuard, 3000);
+      setTimeout(initializeYtDimmer, 1000);
+      setTimeout(initializeYtDimmer, 3000);
     }
 
     init();

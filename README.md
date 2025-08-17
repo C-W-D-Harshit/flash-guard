@@ -1,8 +1,8 @@
-# 🛡️ FlashGuard
+# 🛡️ YtDimmer
 
 **Protect your eyes from sudden bright flashes and eye strain while watching videos.**
 
-FlashGuard is a Chrome extension that automatically detects bright content in videos and dims them in real-time to prevent eye strain, especially when watching in dark environments.
+YtDimmer is a Chrome extension that automatically detects bright content in videos and dims them in real-time to prevent eye strain, especially when watching in dark environments.
 
 ## ✨ Features
 
@@ -26,7 +26,7 @@ FlashGuard is a Chrome extension that automatically detects bright content in vi
 ### From Chrome Web Store (Coming Soon)
 
 1. Visit the Chrome Web Store
-2. Search for "FlashGuard"
+2. Search for "YtDimmer"
 3. Click "Add to Chrome"
 
 ### Manual Installation (Development)
@@ -34,8 +34,8 @@ FlashGuard is a Chrome extension that automatically detects bright content in vi
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/c-w-d-harshit/flash-guard.git
-   cd flash-guard
+   git clone https://github.com/c-w-d-harshit/ytdimmer.git
+   cd ytdimmer
    ```
 
 2. Install dependencies:
@@ -114,7 +114,7 @@ npm run zip
 ### Architecture
 
 ```bash
-flash-guard/
+ytdimmer/
 ├── entrypoints/
 │   ├── background.ts      # Service worker for settings management
 │   ├── content.ts         # Video monitoring and dimming logic
@@ -128,7 +128,7 @@ flash-guard/
 
 ## 🔒 Privacy & Security
 
-- **No Data Collection** - FlashGuard doesn't collect or transmit any user data
+- **No Data Collection** - YtDimmer doesn't collect or transmit any user data
 - **Local Processing** - All video analysis happens locally on your device
 - **Minimal Permissions** - Only requests necessary permissions for functionality
 - **Open Source** - Full source code available for transparency
@@ -157,9 +157,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/c-w-d-harshit/flash-guard/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/c-w-d-harshit/flash-guard/discussions)
-- 📧 **Email**: <support@flashguard.dev>
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/c-w-d-harshit/ytdimmer/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/c-w-d-harshit/ytdimmer/discussions)
+- 📧 **Email**: <support@ytdimmer.com>
 
 ---
 

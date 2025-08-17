@@ -12,14 +12,14 @@ function App() {
     // Load settings from storage
     browser.storage.sync
       .get([
-        "flashGuardEnabled",
-        "flashGuardDimLevel",
-        "flashGuardBrightnessThreshold",
+        "ytDimmerEnabled",
+        "ytDimmerDimLevel",
+        "ytDimmerBrightnessThreshold",
       ])
       .then((result) => {
-        setIsEnabled(result.flashGuardEnabled !== false);
-        setDimLevel(result.flashGuardDimLevel || 0.5);
-        setBrightnessThreshold(result.flashGuardBrightnessThreshold || 0.6);
+        setIsEnabled(result.ytDimmerEnabled !== false);
+        setDimLevel(result.ytDimmerDimLevel || 0.5);
+        setBrightnessThreshold(result.ytDimmerBrightnessThreshold || 0.6);
         setIsLoading(false);
       });
   }, []);
@@ -27,13 +27,13 @@ function App() {
   const handleToggle = () => {
     const newEnabled = !isEnabled;
     setIsEnabled(newEnabled);
-    browser.storage.sync.set({ flashGuardEnabled: newEnabled });
+    browser.storage.sync.set({ ytDimmerEnabled: newEnabled });
   };
 
   const handleDimLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDimLevel = parseFloat(e.target.value);
     setDimLevel(newDimLevel);
-    browser.storage.sync.set({ flashGuardDimLevel: newDimLevel });
+    browser.storage.sync.set({ ytDimmerDimLevel: newDimLevel });
   };
 
   const handleBrightnessThresholdChange = (
@@ -41,7 +41,7 @@ function App() {
   ) => {
     const newThreshold = parseFloat(e.target.value);
     setBrightnessThreshold(newThreshold);
-    browser.storage.sync.set({ flashGuardBrightnessThreshold: newThreshold });
+    browser.storage.sync.set({ ytDimmerBrightnessThreshold: newThreshold });
   };
 
   const getDimLevelLabel = (value: number) => {
@@ -62,14 +62,14 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="flashguard-popup">
+      <div className="ytdimmer-popup">
         <div className="loading">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flashguard-popup">
+    <div className="ytdimmer-popup">
       <div className="header">
         <div className="header-content">
           <div className="logo">
@@ -98,7 +98,7 @@ function App() {
               </svg>
             </div>
             <div className="brand">
-              <h1>FlashGuard</h1>
+              <h1>YtDimmer</h1>
               <span className="tagline">Eye Protection</span>
             </div>
           </div>
@@ -205,7 +205,7 @@ function App() {
           </a>
         </div>
         <a
-          href="https://github.com/C-W-D-Harshit/flash-guard"
+          href="https://github.com/C-W-D-Harshit/ytdimmer"
           target="_blank"
           rel="noopener noreferrer"
           className="star-button"

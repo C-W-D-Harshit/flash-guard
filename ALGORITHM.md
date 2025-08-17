@@ -1,10 +1,10 @@
-# 🔬 FlashGuard Brightness Detection Algorithm
+# 🔬 YtDimmer Brightness Detection Algorithm
 
-This document explains the technical details of how FlashGuard detects and responds to bright video content in real-time.
+This document explains the technical details of how YtDimmer detects and responds to bright video content in real-time.
 
 ## Overview
 
-FlashGuard uses a sophisticated canvas-based frame analysis system that continuously monitors video brightness at 30 FPS and applies CSS filters when bright content is detected.
+YtDimmer uses a sophisticated canvas-based frame analysis system that continuously monitors video brightness at 30 FPS and applies CSS filters when bright content is detected.
 
 ## Core Algorithm
 
@@ -94,11 +94,11 @@ function monitorVideos() {
   if (shouldDim && currentDimLevel === 0) {
     // Start dimming - use user-defined dim level
     updateDimLevel(dimLevel); // User configurable (0.1 - 0.9)
-    console.log('FlashGuard: Bright content detected! Applying dim level:', dimLevel);
+    console.log('YtDimmer: Bright content detected! Applying dim level:', dimLevel);
   } else if (!shouldDim && currentDimLevel > 0) {
     // Stop dimming - return to normal
     updateDimLevel(0);
-    console.log('FlashGuard: Content no longer bright, removing dimming');
+    console.log('YtDimmer: Content no longer bright, removing dimming');
   }
 }
 ```
@@ -208,7 +208,7 @@ Video Frame → Canvas Draw → Pixel Sampling → Luminance Calc → Threshold 
 | Server analysis | ✅ High | ❌ Poor | ❌ None | ❌ Limited |
 | Histogram analysis | ⚠️ Medium | ❌ Poor | ✅ Full | ✅ Good |
 
-FlashGuard's canvas-based approach provides the optimal balance of accuracy, performance, privacy, and compatibility.
+YtDimmer's canvas-based approach provides the optimal balance of accuracy, performance, privacy, and compatibility.
 
 ---
 
