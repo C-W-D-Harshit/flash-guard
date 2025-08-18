@@ -98,7 +98,7 @@ function App() {
               </svg>
             </div>
             <div className="brand">
-              <h1>YtDimmer</h1>
+              <h1>YTDimmer</h1>
               <span className="tagline">Eye Protection</span>
             </div>
           </div>

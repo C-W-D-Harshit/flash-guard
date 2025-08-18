@@ -4,7 +4,7 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
-    name: "YtDimmer",
+    name: "YTDimmer",
     description:
       "Automatically detects and dims bright flashes in videos to prevent eye strain",
     permissions: ["storage", "activeTab"],
