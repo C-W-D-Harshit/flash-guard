@@ -29,6 +29,13 @@ export default defineBackground(() => {
     });
   });
 
+  // Handle keyboard commands
+  browser.commands.onCommand.addListener((command) => {
+    if (command === 'toggle-popup') {
+      browser.action.openPopup();
+    }
+  });
+
   // Handle messages from content scripts or popup
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'getSettings') {
