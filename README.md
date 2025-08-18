@@ -1,5 +1,7 @@
 # 🛡️ YTDimmer
 
+![Preview](public/preview.gif)
+
 **Protect your eyes from sudden bright flashes and eye strain while watching videos.**
 
 YTDimmer is a Chrome extension that automatically detects bright content in videos and dims them in real-time to prevent eye strain, especially when watching in dark environments.
