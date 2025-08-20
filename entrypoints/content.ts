@@ -133,12 +133,13 @@ export default defineContentScript({
 
       currentDimLevel = targetDimLevel;
 
-      // Apply brightness filter directly to video
-      const brightness = Math.max(0.2, 1 - currentDimLevel * 0.8); // Min 20% brightness
+      // Apply brightness filter directly to video with smoother gradual dimming
+      const brightness = Math.max(0.1, 1 - currentDimLevel * 0.9); // Allow darker dimming, min 10% brightness
       const filters = `brightness(${brightness})`;
 
       currentVideo.style.filter = filters;
-      currentVideo.style.transition = "filter 0.1s ease-out";
+      // Use longer transition for smoother gradual changes
+      currentVideo.style.transition = "filter 0.3s ease-out";
     }
 
     function removeDimming(): void {
@@ -176,15 +177,34 @@ export default defineContentScript({
           if (brightness > 0) {
             lastBrightness = brightness;
 
-            // Simple threshold-based dimming using user settings
-            let shouldDim = brightness > brightnessThreshold;
+            // Calculate gradual dimming based on brightness
+            let targetDimLevel = 0;
+            
+            // Start dimming at a lower threshold for gradual effect
+            const gradualStartThreshold = Math.max(0.3, brightnessThreshold - 0.3);
+            
+            if (brightness > gradualStartThreshold) {
+              // Calculate dimming intensity based on how bright the scene is
+              const brightnessRange = 1.0 - gradualStartThreshold;
+              const brightnessFactor = Math.min(1.0, (brightness - gradualStartThreshold) / brightnessRange);
+              
+              // Apply gradual dimming that increases with brightness
+              if (brightness > brightnessThreshold) {
+                // Above user threshold: apply full user-defined dimming (bright/white scenes)
+                targetDimLevel = dimLevel;
+              } else {
+                // Below user threshold but above gradual start: apply much lighter dimming for normal scenes
+                // Use brightness level to determine dimming intensity - higher brightness = more dimming
+                const normalSceneDimming = brightness > 0.7 ? 0.3 : 0.15; // Very light dimming for non-white backgrounds
+                targetDimLevel = dimLevel * brightnessFactor * normalSceneDimming;
+              }
+            }
 
-            if (shouldDim && currentDimLevel === 0) {
-              // Start dimming - use user-defined dim level
-              updateDimLevel(dimLevel);
-            } else if (!shouldDim && currentDimLevel > 0) {
-              // Stop dimming - return to normal
-              updateDimLevel(0);
+            // Smooth transition to target dim level
+            const dimDifference = Math.abs(targetDimLevel - currentDimLevel);
+            if (dimDifference > 0.05) {
+              // Only update if the change is significant enough
+              updateDimLevel(targetDimLevel);
             }
           }
         }
