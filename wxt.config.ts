@@ -7,15 +7,15 @@ export default defineConfig({
     name: "YTDimmer",
     description:
       "Automatically detects and dims bright flashes in videos to prevent eye strain",
-    permissions: ["storage", "activeTab"],
+    permissions: ["storage"],
     commands: {
       "toggle-popup": {
         suggested_key: {
           default: "Ctrl+Shift+Y",
-          mac: "Command+Shift+Y"
+          mac: "Command+Shift+Y",
         },
-        description: "Open YTDimmer popup"
-      }
+        description: "Open YTDimmer popup",
+      },
     },
     host_permissions: [
       "*://www.youtube.com/*",
@@ -24,7 +24,6 @@ export default defineConfig({
       "*://twitch.tv/*",
       "*://vimeo.com/*",
       "*://www.vimeo.com/*",
-      "*://*/*",
     ],
     web_accessible_resources: [
       {
