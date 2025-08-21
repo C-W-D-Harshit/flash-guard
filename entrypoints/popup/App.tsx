@@ -18,7 +18,11 @@ function App() {
       ])
       .then((result) => {
         setIsEnabled(result.ytDimmerEnabled !== false);
-        setDimLevel(result.ytDimmerDimLevel || 0.5);
+        // Use time-based default if not set
+        const now = new Date();
+        const hour = now.getHours();
+        const defaultDimLevel = (hour >= 6 && hour < 20) ? 0.3 : 0.5;
+        setDimLevel(result.ytDimmerDimLevel || defaultDimLevel);
         setBrightnessThreshold(result.ytDimmerBrightnessThreshold || 0.6);
         setIsLoading(false);
       });

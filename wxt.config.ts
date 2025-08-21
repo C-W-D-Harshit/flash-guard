@@ -8,15 +8,6 @@ export default defineConfig({
     description:
       "Automatically detects and dims bright flashes in videos to prevent eye strain",
     permissions: ["storage"],
-    commands: {
-      "toggle-popup": {
-        suggested_key: {
-          default: "Ctrl+Shift+Y",
-          mac: "Command+Shift+Y",
-        },
-        description: "Open YTDimmer popup",
-      },
-    },
     host_permissions: [
       "*://www.youtube.com/*",
       "*://youtube.com/*",
